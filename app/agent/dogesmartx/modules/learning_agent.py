@@ -12,10 +12,41 @@ class LearningAgent(BaseAgentModule):
     """Learning agent for pattern recognition and optimization"""
     
     def __init__(self):
-        super().__init__("Learning Agent")
+        super().__init__("Learning Agent", "Provides machine learning and optimization capabilities")
         self.patterns = {}
         self.user_preferences = {}
         self.performance_metrics = {}
+    
+    def _register_capabilities(self):
+        """Register learning capabilities"""
+        from ..types import OperationCapability
+        
+        self.register_capability(OperationCapability(
+            name="optimize_parameters",
+            description="Optimize parameters based on historical performance",
+            requirements=["operation_type"],
+            examples=["Optimize atomic swap parameters"]
+        ))
+        
+        self.register_capability(OperationCapability(
+            name="predict_success_probability",
+            description="Predict success probability for operations",
+            requirements=["operation_params"],
+            examples=["Predict swap success probability"]
+        ))
+    
+    async def execute_capability(self, capability_name: str, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a learning capability"""
+        if capability_name == "optimize_parameters":
+            op_type = inputs.get("operation_type", "swap")
+            result = await self.optimize_parameters(op_type)
+            return result
+        elif capability_name == "predict_success_probability":
+            params = inputs.get("operation_params", {})
+            probability = await self.predict_success_probability(params)
+            return {"probability": probability}
+        else:
+            return {"error": f"Unknown capability: {capability_name}"}
     
     async def learn_from_swap(self, swap_data: Dict[str, Any]) -> None:
         """Learn patterns from completed swap operations"""

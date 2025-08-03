@@ -67,6 +67,7 @@ class AgentState(BaseModel):
 
 class DogeSmartXConfig(BaseModel):
     """Configuration for DogeSmartX agent"""
+    version: str = "2.0.0"
     testnet_mode: bool = True
     sepolia_rpc_url: Optional[str] = None
     dogecoin_rpc_url: Optional[str] = None
@@ -145,6 +146,21 @@ class OperationCapability(BaseModel):
     examples: List[str]
     supported: bool = True
     testnet_only: bool = True
+
+
+class OperationResult(BaseModel):
+    """Result of an operation execution"""
+    success: bool
+    operation_type: str
+    data: Dict[str, Any] = Field(default_factory=dict)
+    message: str = ""
+    error: Optional[str] = None
+    timestamp: float = Field(default_factory=time.time)
+    
+    class Config:
+        json_encoders = {
+            Decimal: lambda v: float(v) if v is not None else None
+        }
 
 
 # Constants

@@ -12,9 +12,50 @@ class MarketAnalysisAgent(BaseAgentModule):
     """Market analysis and price tracking agent for DogeSmartX"""
     
     def __init__(self):
-        super().__init__("Market Analysis Agent")
+        super().__init__("Market Analysis Agent", "Provides market data analysis and price tracking for DogeSmartX")
         self.prices = {}
         self.market_data = {}
+    
+    def _register_capabilities(self):
+        """Register market analysis capabilities"""
+        from ..types import OperationCapability
+        
+        self.register_capability(OperationCapability(
+            name="get_doge_price",
+            description="Get current DOGE price in USD",
+            requirements=[],
+            examples=["Get current DOGE price"]
+        ))
+        
+        self.register_capability(OperationCapability(
+            name="get_eth_price", 
+            description="Get current ETH price in USD",
+            requirements=[],
+            examples=["Get current ETH price"]
+        ))
+        
+        self.register_capability(OperationCapability(
+            name="analyze_swap_conditions",
+            description="Analyze market conditions for optimal swap timing",
+            requirements=["from_currency", "to_currency"],
+            examples=["Analyze ETH to DOGE swap conditions"]
+        ))
+    
+    async def execute_capability(self, capability_name: str, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a market analysis capability"""
+        if capability_name == "get_doge_price":
+            price = await self.get_doge_price()
+            return {"price": float(price) if price else None}
+        elif capability_name == "get_eth_price":
+            price = await self.get_eth_price()
+            return {"price": float(price) if price else None}
+        elif capability_name == "analyze_swap_conditions":
+            from_currency = inputs.get("from_currency", "eth")
+            to_currency = inputs.get("to_currency", "doge")
+            result = await self.analyze_swap_conditions(from_currency, to_currency)
+            return result
+        else:
+            return {"error": f"Unknown capability: {capability_name}"}
     
     async def get_doge_price(self) -> Optional[Decimal]:
         """Get current DOGE price in USD"""
