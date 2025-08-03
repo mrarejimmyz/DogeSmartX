@@ -18,3 +18,6 @@
 !requirements.txt
 !setup.py
 !main.py
+
+# Ignore Cline configuration (contains sensitive data)
+.cline/
