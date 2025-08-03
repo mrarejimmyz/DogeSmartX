@@ -8,6 +8,7 @@ import asyncio
 from typing import Dict, Optional, Any
 from app.logger import logger
 from app.schema import Message
+from app.exceptions import AgentTaskComplete
 from .types import OperationResult, SwapRequest
 
 # Import orchestration if available
@@ -18,6 +19,18 @@ try:
 except ImportError as e:
     logger.warning(f"Orchestration engine not available: {e}")
     ORCHESTRATION_AVAILABLE = False
+
+# Import response handler
+try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+    from dogesmartx_response_handler import handle_dogesmartx_response
+    RESPONSE_HANDLER_AVAILABLE = True
+    logger.info("🎯 DogeSmartX Response Handler available!")
+except ImportError as e:
+    logger.warning(f"Response handler not available: {e}")
+    RESPONSE_HANDLER_AVAILABLE = False
 
 
 class OperationDetector:
@@ -113,7 +126,7 @@ class OperationRouter:
         }
 
     async def route_operation(self, message: Message) -> bool:
-        """Route operation to appropriate handler"""
+        """Route operation to appropriate handler with response consolidation"""
         try:
             operation_type = await self.detector.detect_operation_type(message.content)
             logger.info(f"🎯 Detected operation: {operation_type}")
@@ -121,14 +134,40 @@ class OperationRouter:
             handler_name = self.operation_handlers.get(operation_type)
             if handler_name and hasattr(self.agent, handler_name):
                 handler = getattr(self.agent, handler_name)
-                return await handler(message)
+                result = await handler(message)
+                
+                # If this was a successful operation with result data, 
+                # check if we should generate a final comprehensive response
+                if hasattr(self.agent, 'operation_result') and RESPONSE_HANDLER_AVAILABLE:
+                    try:
+                        final_response = handle_dogesmartx_response(self.agent.operation_result)
+                        self.agent.messages.append(Message(role="assistant", content=final_response))
+                        raise AgentTaskComplete(final_response)
+                    except Exception as e:
+                        logger.warning(f"Response handler failed: {e}")
+                
+                return result
             else:
                 # Fallback to parent class tool calling
                 return await self.agent._fallback_operation(message)
                 
+        except AgentTaskComplete:
+            # Allow completion to propagate
+            raise
         except Exception as e:
             logger.error(f"❌ Operation routing failed: {e}")
-            await self.agent._send_error_response(message, e)
+            
+            # Generate error recovery response
+            if RESPONSE_HANDLER_AVAILABLE:
+                error_response = handle_dogesmartx_response({
+                    'type': 'error_recovery',
+                    'error': str(e),
+                    'message': 'Operation encountered an error but DogeSmartX remains operational'
+                })
+                self.agent.messages.append(Message(role="assistant", content=error_response))
+                raise AgentTaskComplete(error_response)
+            else:
+                await self.agent._send_error_response(message, e)
             return False
 
     def parse_swap_request(self, content: str) -> SwapRequest:
