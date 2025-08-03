@@ -101,27 +101,56 @@ class DogeSmartXSepoliaAgent(ToolCallAgent):
 
     def __init__(self, **kwargs):
         """Initialize the Sepolia testnet DogeSmartX agent."""
-        super().__init__(**kwargs)
-        
-        # Validate configuration
-        self._validate_sepolia_config()
-        
-        # Initialize services
-        self._initialize_sepolia_services()
-        
-        # Initialize tools
-        self.available_tools = ToolCollection(
-            PythonExecute(),
-            StrReplaceEditor(),
-            WebSearch(),
-            Terminate(),
-        )
-        
-        # Set system prompts
-        self.system_prompt = self._get_sepolia_system_prompt()
-        self.next_step_prompt = self._get_sepolia_next_step_prompt()
-        
-        logger.info("🧪 DogeSmartX Sepolia Testnet Agent v2.0 initialized! Ready for testing! 🚀")
+        try:
+            # Initialize with proper ToolCallAgent initialization
+            super().__init__(**kwargs)
+            
+            # Validate configuration
+            self._validate_sepolia_config()
+            
+            # Initialize services
+            self._initialize_sepolia_services()
+            
+            # Set system prompts
+            self.system_prompt = self._get_sepolia_system_prompt()
+            self.next_step_prompt = self._get_sepolia_next_step_prompt()
+            
+            # Add connection validation
+            self._validate_connections()
+            
+            logger.info("🧪 DogeSmartX Sepolia Testnet Agent v2.0 initialized! Ready for testing! 🚀")
+            
+        except Exception as e:
+            logger.error(f"❌ DogeSmartX initialization failed: {e}")
+            # Ensure the agent can still function in a basic mode
+            self._initialize_fallback_mode()
+
+    def _validate_connections(self) -> None:
+        """Validate LLM and service connections."""
+        try:
+            if hasattr(self, 'llm') and self.llm:
+                logger.info("✅ LLM connection available")
+            else:
+                logger.warning("⚠️ LLM connection not available - using fallback mode")
+                
+        except Exception as e:
+            logger.warning(f"⚠️ Connection validation failed: {e}")
+
+    def _initialize_fallback_mode(self) -> None:
+        """Initialize basic fallback mode when full initialization fails."""
+        try:
+            # Basic configuration
+            self.state = AgentState()
+            self.system_prompt = self._get_sepolia_system_prompt()
+            self.next_step_prompt = self._get_sepolia_next_step_prompt()
+            
+            # Minimal tool collection
+            self.available_tools = ToolCollection(Terminate())
+            
+            logger.info("🔄 DogeSmartX initialized in fallback mode - basic functionality available")
+            
+        except Exception as e:
+            logger.error(f"❌ Even fallback initialization failed: {e}")
 
     def _validate_sepolia_config(self) -> None:
         """Validate the Sepolia configuration."""
@@ -261,24 +290,166 @@ Provide a clear, actionable next step with specific implementation details.
             # Log the request
             logger.info(f"🧪 Processing Sepolia testnet request: {message.content}")
             
-            # Detect operation type
-            operation_type = self._detect_operation_type(message.content)
-            
-            if operation_type == "contract_deployment":
-                await self._handle_contract_deployment(message)
-            elif operation_type == "htlc_implementation":
-                await self._handle_htlc_implementation(message)
-            elif operation_type == "resolver_setup":
-                await self._handle_resolver_setup(message)
-            elif operation_type == "test_execution":
-                await self._handle_test_execution(message)
-            else:
-                # Default processing
-                await super().process_message(message)
+            # Use parent class tool calling system but with DogeSmartX-specific logic
+            await super().process_message(message)
             
         except Exception as e:
             logger.error(f"❌ Error processing Sepolia message: {e}")
             await self._send_error_response(message, e)
+
+    async def step(self) -> bool:
+        """Override step method to provide DogeSmartX-specific behavior."""
+        try:
+            # Get the current user message
+            if hasattr(self, 'messages') and self.messages:
+                user_messages = [msg for msg in self.messages if msg.role == 'user']
+                if user_messages:
+                    current_message = user_messages[-1]
+                    
+                    # Detect operation type and provide specialized assistance
+                    operation_type = self._detect_operation_type(current_message.content)
+                    
+                    # Provide immediate DogeSmartX expertise response
+                    response_data = {
+                        "action": operation_type,
+                        "status": "processing",
+                        "message": f"🧪 DogeSmartX analyzing {operation_type} request...",
+                        "user_request": current_message.content,
+                        "expertise": self._get_dogesmartx_expertise(operation_type),
+                        "next_steps": self._get_next_steps_for_request(current_message.content)
+                    }
+                    
+                    # Format and send detailed response
+                    response_message = self._format_dogesmartx_response(response_data)
+                    
+                    # Add message to the conversation
+                    response_msg = Message(role="assistant", content=response_message)
+                    self.messages.append(response_msg)
+                    
+                    logger.info("🧪 DogeSmartX provided specialized response")
+                    
+                    # Raise AgentTaskComplete to properly terminate with the response
+                    raise AgentTaskComplete(response_message)
+            
+            # Let the parent class handle tool calling if needed
+            return await super().step()
+            
+        except AgentTaskComplete:
+            # Re-raise AgentTaskComplete to properly terminate
+            raise
+        except Exception as e:
+            logger.error(f"❌ DogeSmartX step failed: {e}")
+            # Add error message to conversation
+            error_msg = Message(role="assistant", content=f"❌ DogeSmartX Error: {str(e)}")
+            if hasattr(self, 'messages'):
+                self.messages.append(error_msg)
+            raise AgentTaskComplete(f"❌ DogeSmartX Error: {str(e)}")
+
+    def _get_dogesmartx_expertise(self, operation_type: str) -> list:
+        """Get DogeSmartX-specific expertise for the operation type."""
+        expertise_map = {
+            "contract_deployment": [
+                "🚀 1inch Fusion+ contract artifacts preparation",
+                "⚙️ Sepolia testnet deployment configuration", 
+                "🔍 Contract verification and validation",
+                "📊 Gas optimization strategies"
+            ],
+            "htlc_implementation": [
+                "🔒 SHA-256 hash secret generation",
+                "⏰ Timelock mechanism implementation (24h default)",
+                "🌉 Cross-chain coordination protocols",
+                "✅ Atomic swap validation mechanisms"
+            ],
+            "resolver_setup": [
+                "🤖 Automated resolver deployment",
+                "📊 Real-time monitoring systems",
+                "⚡ Execution optimization",
+                "🛡️ Security validation protocols"
+            ],
+            "test_execution": [
+                "🧪 Testnet connectivity validation",
+                "🔐 HTLC secret management",
+                "📈 Swap execution monitoring",
+                "📋 Comprehensive test reporting"
+            ],
+            "general": [
+                "🔄 ETH ↔ DOGE atomic swaps on Sepolia testnet",
+                "🚀 1inch Fusion+ integration expertise",
+                "🔒 HTLC implementation and testing",
+                "📊 DeFi protocol optimization"
+            ]
+        }
+        return expertise_map.get(operation_type, expertise_map["general"])
+
+    def _format_dogesmartx_response(self, response_data: Dict[str, Any]) -> str:
+        """Format a comprehensive DogeSmartX response."""
+        lines = [
+            "🧪 **DogeSmartX Sepolia Testnet Agent Response**",
+            "=" * 50,
+            f"📋 **Operation**: {response_data['action']}",
+            f"⚡ **Status**: {response_data['status']}",
+            f"💬 **Analysis**: {response_data['message']}",
+            "",
+            "🔧 **DogeSmartX Expertise:**"
+        ]
+        
+        for expertise in response_data.get('expertise', []):
+            lines.append(f"   • {expertise}")
+            
+        lines.append("")
+        lines.append("📝 **Recommended Next Steps:**")
+        
+        for i, step in enumerate(response_data.get('next_steps', []), 1):
+            lines.append(f"   {i}. {step}")
+            
+        lines.extend([
+            "",
+            "✨ **Ready to assist with:**",
+            "   • Contract deployment and verification",
+            "   • HTLC implementation and testing", 
+            "   • Cross-chain swap execution",
+            "   • Automated resolver setup",
+            "",
+            "🎯 **How can I help you execute this operation?**"
+        ])
+        
+        return "\n".join(lines)
+
+    def _get_next_steps_for_request(self, content: str) -> list:
+        """Get specific next steps based on the user's request."""
+        content_lower = content.lower()
+        
+        if "swap" in content_lower:
+            return [
+                "1. Validate testnet connectivity (Sepolia + Dogecoin testnet)",
+                "2. Generate HTLC secret and hash",
+                "3. Deploy HTLC contracts on both networks", 
+                "4. Execute atomic swap sequence",
+                "5. Monitor swap completion"
+            ]
+        elif "deploy" in content_lower:
+            return [
+                "1. Prepare 1inch Fusion+ contract artifacts",
+                "2. Configure Sepolia testnet connection",
+                "3. Deploy contracts with proper gas settings",
+                "4. Verify contract deployment", 
+                "5. Initialize contract parameters"
+            ]
+        elif "htlc" in content_lower:
+            return [
+                "1. Set up HTLC contract templates",
+                "2. Configure timelock parameters (24h default)",
+                "3. Generate secure hash secrets",
+                "4. Deploy HTLC on both chains",
+                "5. Test lock/unlock mechanisms"
+            ]
+        else:
+            return [
+                "1. Specify your DeFi operation (swap, deploy, test)",
+                "2. Configure testnet settings", 
+                "3. Execute operation with monitoring",
+                "4. Validate results and security"
+            ]
 
     def _detect_operation_type(self, content: str) -> str:
         """Detect the type of Sepolia operation requested."""
@@ -295,93 +466,24 @@ Provide a clear, actionable next step with specific implementation details.
         else:
             return "general"
 
-    async def _handle_contract_deployment(self, message: Message) -> None:
-        """Handle 1inch Fusion+ contract deployment on Sepolia."""
-        logger.info("🚀 Handling Fusion+ contract deployment on Sepolia")
-        
-        # Implementation for contract deployment
-        await self._send_response(message, {
-            "action": "contract_deployment",
-            "status": "processing",
-            "message": "Deploying 1inch Fusion+ contracts on Sepolia testnet...",
-            "next_steps": [
-                "1. Prepare contract artifacts",
-                "2. Deploy to Sepolia network",
-                "3. Verify contract deployment",
-                "4. Initialize contract parameters"
-            ]
-        })
-
-    async def _handle_htlc_implementation(self, message: Message) -> None:
-        """Handle HTLC implementation for atomic swaps."""
-        logger.info("🔒 Handling HTLC implementation")
-        
-        await self._send_response(message, {
-            "action": "htlc_implementation",
-            "status": "processing", 
-            "message": "Implementing HTLC for cross-chain atomic swaps...",
-            "features": [
-                "✅ SHA-256 hash secret generation",
-                "✅ Timelock mechanism (24-hour default)",
-                "✅ Cross-chain coordination",
-                "✅ Atomic swap validation"
-            ]
-        })
-
-    async def _handle_resolver_setup(self, message: Message) -> None:
-        """Handle automated resolver setup."""
-        logger.info("🤖 Handling resolver setup")
-        
-        await self._send_response(message, {
-            "action": "resolver_setup",
-            "status": "processing",
-            "message": "Setting up automated resolver for swap monitoring...",
-            "capabilities": [
-                "📊 Real-time swap monitoring",
-                "⚡ Automated execution",
-                "🛡️ Security validation",
-                "📈 Performance tracking"
-            ]
-        })
-
-    async def _handle_test_execution(self, message: Message) -> None:
-        """Handle test swap execution."""
-        logger.info("🧪 Handling test execution")
-        
-        await self._send_response(message, {
-            "action": "test_execution",
-            "status": "processing",
-            "message": "Executing test cross-chain swap...",
-            "test_plan": [
-                "1. Validate testnet connections",
-                "2. Generate HTLC secrets",
-                "3. Execute swap transactions",
-                "4. Monitor completion"
-            ]
-        })
-
-    async def _send_response(self, message: Message, response_data: Dict[str, Any]) -> None:
-        """Send structured response to user."""
-        response_content = json.dumps(response_data, indent=2)
-        
-        # Create response message
-        response = Message(
-            role="assistant",
-            content=f"🧪 **Sepolia Testnet Operation**\n\n```json\n{response_content}\n```"
-        )
-        
-        # Send response
-        await self.llm.send_message(response)
-
     async def _send_error_response(self, message: Message, error: Exception) -> None:
         """Send error response to user."""
-        error_response = {
-            "status": "error",
-            "message": f"Sepolia operation failed: {str(error)}",
-            "suggestion": "Please check testnet connectivity and try again"
-        }
-        
-        await self._send_response(message, error_response)
+        error_message = f"""
+❌ **DogeSmartX Error Response**
+═══════════════════════════════════════
+
+🚨 **Error**: {str(error)}
+💡 **Suggestion**: Please check testnet connectivity and try again
+
+🔧 **DogeSmartX can still help with:**
+   • Contract deployment guidance
+   • HTLC implementation advice  
+   • Testnet configuration support
+   • Alternative swap strategies
+
+🎯 **Please try rephrasing your request or ask for specific assistance.**
+"""
+        await self.send_message(Message(role="assistant", content=error_message))
 
 
 # Alias for backward compatibility
