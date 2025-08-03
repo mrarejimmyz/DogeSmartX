@@ -47,6 +47,21 @@ class OperationDetector:
         """Detect the type of DogeSmartX operation requested with AI orchestration."""
         content_lower = content.lower()
         
+        # Check if this is a completion/success message that should terminate
+        completion_indicators = [
+            "real atomic swap execution completed",
+            "atomic swap summary:",
+            "technical implementation:",
+            "dogesmartx is ready",
+            "execution completed",
+            "✅",
+            "🎯 **real atomic swap summary:**"
+        ]
+        
+        if any(indicator in content_lower for indicator in completion_indicators):
+            logger.info("🏁 Detected completion message - triggering task complete")
+            return "completion_message"
+        
         # Check if this is a conversational DeFi request that needs orchestration
         if any(phrase in content_lower for phrase in self.conversational_indicators):
             if ORCHESTRATION_AVAILABLE:
@@ -87,6 +102,7 @@ class OperationRouter:
         
         # Map operation types to handler methods
         self.operation_handlers = {
+            "completion_message": "_handle_completion_message",
             "conversational_defi": "_execute_conversational_defi",
             "atomic_swap": "_execute_atomic_swap", 
             "contract_deployment": "_execute_contract_deployment",
@@ -141,7 +157,7 @@ class OperationRouter:
         return SwapRequest(
             from_currency=from_currency,
             to_currency=to_currency,
-            amount=amount,
+            from_amount=amount,
             conditions=conditions if conditions else None
         )
 

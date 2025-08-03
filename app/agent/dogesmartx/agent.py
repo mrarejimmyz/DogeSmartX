@@ -142,9 +142,16 @@ class DogeSmartXAgent(ToolCallAgent):
 
     async def send_introduction(self) -> None:
         """Send agent introduction"""
-        await self.send_message(Message(role="assistant", content=self.introduction))
+        self.memory.messages.append(Message(role="assistant", content=self.introduction))
 
     # Modular operation handlers (delegated to specialized classes)
+    
+    async def _handle_completion_message(self, message: Message) -> bool:
+        """Handle completion/success messages by finalizing the task"""
+        logger.info("🏁 Handling completion message - task finished")
+        # The message content is already the final result, so we can complete the task
+        from app.exceptions import AgentTaskComplete
+        raise AgentTaskComplete(message.content)
     
     async def _execute_conversational_defi(self, message: Message) -> bool:
         """Execute conversational DeFi request using orchestration engine"""
@@ -262,7 +269,7 @@ I can help you with DeFi operations! Try these commands:
 
 🎯 **Please try rephrasing your request or ask for specific assistance.**
 """
-        await self.send_message(Message(role="assistant", content=error_message))
+        self.memory.messages.append(Message(role="assistant", content=error_message))
 
     def update_market_data(self, eth_price: float = None, doge_price: float = None):
         """Update market data for the agent"""

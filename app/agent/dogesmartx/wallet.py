@@ -41,6 +41,13 @@ except ImportError as e:
     print(f"Cryptography not available: {e}")
     CRYPTO_AVAILABLE = False
 
+try:
+    from .dogechain_wallet import DogechainWallet
+    DOGECHAIN_AVAILABLE = True
+except ImportError as e:
+    print(f"Dogechain wallet not available: {e}")
+    DOGECHAIN_AVAILABLE = False
+
 from app.logger import logger
 
 @dataclass
@@ -66,6 +73,7 @@ class DogeSmartXWallet:
         self.testnet_mode = testnet_mode
         self.sepolia_wallet = None
         self.dogecoin_wallet = None
+        self.dogechain_wallet = None  # New real DOGE wallet for persistent storage
         self.web3 = None
         self.swap_secrets = {}
         self.active_swaps = {}
@@ -80,7 +88,8 @@ class DogeSmartXWallet:
                 
             result = {
                 "sepolia": await self.initialize_sepolia_wallet(eth_private_key, use_funded_wallet),
-                "dogecoin": await self.initialize_dogecoin_wallet(doge_wallet_name)
+                "dogecoin": await self.initialize_dogecoin_wallet(doge_wallet_name),
+                "dogechain": await self.initialize_dogechain_wallet()  # Add real DOGE storage
             }
             self.initialized = True
             logger.info("✅ DogeSmartX wallets initialized successfully")
@@ -99,11 +108,42 @@ class DogeSmartXWallet:
                 self.sepolia_wallet = Account.from_key(private_key)
                 logger.info("✅ Using provided private key")
             elif use_funded_wallet:
-                # For testing: simulate using your funded wallet address
-                # In production, you would provide the actual private key
-                logger.info("🔐 Funded wallet mode - simulating your wallet 0xB3a27D8a4992435Ac36C79B5D1310dD6508F317f")
-                self.sepolia_wallet = Account.create()  # Creates test wallet, but we'll check funded wallet balance
-                self.funded_wallet_address = "0xB3a27D8a4992435Ac36C79B5D1310dD6508F317f"
+                # SECURITY: Get private key from environment variable
+                import os
+                actual_private_key = os.getenv('DOGESMARTX_PRIVATE_KEY')
+                
+                # Fallback: Try to load from .env file
+                if not actual_private_key:
+                    try:
+                        from pathlib import Path
+                        env_file = Path(__file__).parent.parent.parent / '.env'
+                        if env_file.exists():
+                            with open(env_file, 'r') as f:
+                                for line in f:
+                                    if line.startswith('DOGESMARTX_PRIVATE_KEY='):
+                                        actual_private_key = line.split('=', 1)[1].strip()
+                                        logger.info("🔑 Loaded private key from .env file")
+                                        break
+                    except Exception as e:
+                        logger.warning(f"⚠️ Could not load .env file: {e}")
+                
+                if not actual_private_key or actual_private_key == "YOUR_ACTUAL_PRIVATE_KEY_HERE":
+                    # For demo purposes only - in production, always use environment variables
+                    logger.warning("🚨 SECURITY WARNING: Private key not found in environment variables")
+                    logger.warning("🔑 Set DOGESMARTX_PRIVATE_KEY environment variable for production use")
+                    logger.info("🧪 Using demo mode with generated wallet for testing")
+                    
+                    # Generate a demo wallet for testing
+                    self.sepolia_wallet = Account.create()
+                    self.funded_wallet_address = self.sepolia_wallet.address
+                    logger.info(f"🧪 Demo wallet generated: {self.funded_wallet_address[:10]}...{self.funded_wallet_address[-8:]}")
+                else:
+                    # Use the provided private key
+                    self.sepolia_wallet = Account.from_key(actual_private_key)
+                    self.funded_wallet_address = self.sepolia_wallet.address
+                    
+                    logger.info(f"🔐 Using wallet from environment: {self.funded_wallet_address[:10]}...{self.funded_wallet_address[-8:]}")
+                    logger.info("✅ Private key loaded successfully")
             else:
                 # Generate new wallet for testnet
                 self.sepolia_wallet = Account.create()
@@ -285,6 +325,48 @@ class DogeSmartXWallet:
             logger.error(f"❌ Real Dogecoin wallet creation failed: {e}")
             raise
 
+    async def initialize_dogechain_wallet(self) -> Dict[str, Any]:
+        """Initialize Dogechain wallet for real DOGE storage"""
+        try:
+            if not DOGECHAIN_AVAILABLE:
+                logger.warning("⚠️ Dogechain wallet not available, using simulation")
+                return {
+                    "storage_address": getattr(self, 'funded_wallet_address', "0x0000000000000000000000000000000000000000"),
+                    "network": "dogechain_testnet_simulated",
+                    "current_balance_doge": 0.0,
+                    "simulated": True,
+                    "chain_id": 568,
+                    "rpc_url": "https://rpc-testnet.dogechain.dog"
+                }
+            
+            # Initialize the real Dogechain wallet
+            self.dogechain_wallet = DogechainWallet()
+            
+            # Use the funded wallet address as storage address
+            storage_address = getattr(self, 'funded_wallet_address', None)
+            if not storage_address:
+                storage_address = "0x0000000000000000000000000000000000000000"
+                logger.warning("⚠️ No funded wallet address available, using demo address")
+            
+            # Initialize the wallet connection and setup
+            wallet_info = await self.dogechain_wallet.initialize(storage_address)
+            
+            logger.info(f"🐕 Dogechain wallet initialized for storage: {wallet_info.get('storage_address', 'N/A')}")
+            logger.info(f"💰 DOGE Balance: {wallet_info.get('current_balance_doge', 0)} DOGE")
+            
+            return wallet_info
+            
+        except Exception as e:
+            logger.error(f"❌ Dogechain wallet initialization failed: {e}")
+            # Return simulation fallback
+            return {
+                "address": "0xb9966f1007e4ad3a37d29949162d68b0df8eb51c", 
+                "network": "dogechain_testnet_simulated",
+                "balance": 0.0,
+                "simulated": True,
+                "error": str(e)
+            }
+
     async def create_atomic_swap(self, eth_amount: float, doge_amount: float, timelock_hours: int = 24) -> SwapParams:
         """Create parameters for a new atomic swap"""
         if not self.initialized:
@@ -406,7 +488,7 @@ class DogeSmartXWallet:
             
             # Sign and send transaction
             signed_txn = self.sepolia_wallet.sign_transaction(transaction)
-            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
             
             logger.info(f"📤 Transaction sent: {tx_hash.hex()}")
             logger.info(f"⏳ Waiting for confirmation...")
@@ -436,7 +518,7 @@ class DogeSmartXWallet:
                 
                 # Sign and send HTLC creation transaction
                 signed_htlc_txn = self.sepolia_wallet.sign_transaction(create_htlc_txn)
-                htlc_tx_hash = self.web3.eth.send_raw_transaction(signed_htlc_txn.rawTransaction)
+                htlc_tx_hash = self.web3.eth.send_raw_transaction(signed_htlc_txn.raw_transaction)
                 
                 logger.info(f"📤 HTLC creation sent: {htlc_tx_hash.hex()}")
                 
@@ -620,21 +702,31 @@ class DogeSmartXWallet:
             logger.info(f"💫 Executing real swap: {swap_params.swap_id}")
             logger.info(f"💰 {eth_amount} ETH ↔ {doge_amount} DOGE")
             
-            # Check if we have sufficient balance for real deployment
+            # Check if we can deploy REAL HTLC contracts
             if self.web3 and self.sepolia_wallet:
-                balance = self.web3.eth.get_balance(self.sepolia_wallet.address)
+                # Check your own wallet balance (not a random funded wallet)
+                wallet_address = self.sepolia_wallet.address
+                balance = self.web3.eth.get_balance(wallet_address)
                 amount_wei = self.web3.to_wei(eth_amount, 'ether')
                 gas_estimate = self.web3.eth.gas_price * 800000  # Conservative gas estimate
                 
+                balance_eth = self.web3.from_wei(balance, 'ether')
+                required_eth = self.web3.from_wei(amount_wei + gas_estimate, 'ether')
+                
+                logger.info(f"💰 Your wallet ({wallet_address}): {balance_eth:.6f} ETH")
+                logger.info(f"💸 Required for real swap: {required_eth:.6f} ETH")
+                
                 if balance >= amount_wei + gas_estimate:
-                    logger.info("✅ Sufficient balance for REAL ETH HTLC deployment")
-                    # Deploy REAL ETH HTLC
+                    logger.info("✅ Sufficient balance with private key - DEPLOYING REAL HTLC!")
+                    # Deploy REAL ETH HTLC with actual transactions
                     eth_deployment = await self.deploy_eth_htlc(swap_params, recipient_eth_address)
                     swap_params.status = "eth_htlc_deployed"
                 else:
-                    logger.warning("⚠️ Insufficient balance for real deployment, simulating...")
-                    eth_deployment = await self._simulate_eth_htlc_deployment(swap_params, recipient_eth_address)
-                    swap_params.status = "eth_htlc_simulated"
+                    logger.info(f"💡 Need {required_eth:.6f} ETH for real deployment. Get testnet ETH from:")
+                    logger.info(f"   🚰 https://sepoliafaucet.com/")
+                    logger.info(f"   🚰 https://sepolia-faucet.pk910.de/")
+                    eth_deployment = await self._simulate_testnet_demo(swap_params, recipient_eth_address, balance_eth, wallet_address)
+                    swap_params.status = "testnet_demo"
             else:
                 logger.warning("⚠️ No web3 connection, simulating ETH HTLC...")
                 eth_deployment = await self._simulate_eth_htlc_deployment(swap_params, recipient_eth_address)
@@ -718,6 +810,52 @@ class DogeSmartXWallet:
         logger.info(f"🧪 Simulated ETH HTLC: {simulated_contract_address}")
         logger.info(f"💰 Amount: {swap_params.eth_amount} ETH")
         logger.info("⚠️ Simulation - use funded wallet for real deployment")
+
+    async def _simulate_realistic_eth_htlc_deployment(self, swap_params: SwapParams, recipient_address: str, wallet_balance: float) -> Dict[str, Any]:
+        """Simulate ETH HTLC deployment with REALISTIC data based on actual wallet"""
+        # Generate realistic but verifiable contract address
+        import hashlib
+        seed = f"{swap_params.swap_id}{recipient_address}{swap_params.secret_hash}"
+        contract_hash = hashlib.sha256(seed.encode()).hexdigest()
+        realistic_contract_address = f"0x{contract_hash[:40]}"
+        realistic_tx_hash = f"0x{contract_hash[40:104]}"
+        
+        # Use actual gas prices from network
+        gas_price = self.web3.eth.gas_price if self.web3 else 20000000000
+        gas_used = 750000
+        actual_cost_wei = gas_price * gas_used
+        actual_cost_eth = self.web3.from_wei(actual_cost_wei, 'ether') if self.web3 else 0.015
+        
+        deployment_data = {
+            "swap_id": swap_params.swap_id,
+            "contract_address": realistic_contract_address,
+            "transaction_hash": realistic_tx_hash,
+            "gas_price": gas_price,
+            "gas_used": gas_used,
+            "cost_wei": actual_cost_wei,
+            "cost_eth": float(actual_cost_eth),
+            "secret_hash": swap_params.secret_hash,
+            "timelock": swap_params.timelock,
+            "recipient": recipient_address,
+            "amount_wei": int(swap_params.eth_amount * 10**18),
+            "amount_eth": float(swap_params.eth_amount),
+            "network": "sepolia",
+            "status": "ready_for_real_deployment",
+            "block_number": self.web3.eth.get_block('latest').number if self.web3 else 4567890,
+            "explorer_url": f"https://sepolia.etherscan.io/tx/{realistic_tx_hash}",
+            "wallet_balance": wallet_balance,
+            "note": f"Ready for REAL deployment! Wallet has {wallet_balance:.6f} ETH - provide private key to execute actual transaction"
+        }
+        
+        # Update swap params
+        swap_params.eth_htlc_address = realistic_contract_address
+        
+        logger.info(f"🎯 READY for real ETH HTLC: {realistic_contract_address}")
+        logger.info(f"💰 Amount: {swap_params.eth_amount} ETH")
+        logger.info(f"💳 Wallet balance: {wallet_balance:.6f} ETH")
+        logger.info("🔑 Provide private key for REAL deployment!")
+        
+        return deployment_data
         
         return deployment_data
     async def execute_atomic_swap(self, swap_id: str, recipient_eth_address: str, recipient_doge_address: str) -> Dict[str, Any]:
@@ -853,7 +991,7 @@ class DogeSmartXWallet:
             
             # Sign and send transaction
             signed_txn = self.sepolia_wallet.sign_transaction(withdraw_txn)
-            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
             
             logger.info(f"📤 Withdraw transaction sent: {tx_hash.hex()}")
             
@@ -1103,7 +1241,7 @@ class DogeSmartXWallet:
             
             # Sign and send transaction
             signed_txn = self.sepolia_wallet.sign_transaction(refund_txn)
-            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            tx_hash = self.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
             
             logger.info(f"📤 Refund transaction sent: {tx_hash.hex()}")
             

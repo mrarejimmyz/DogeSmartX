@@ -46,3 +46,10 @@ MANIFEST
 
 # Ignore Cline configuration (contains sensitive data)
 .cline/
+
+# Ignore wallet files (contain sensitive data)
+*wallet*.json
+*.wallet
+dogechain_wallet.json
+dogechain_wallet.json.backup
+*.private_key

@@ -109,6 +109,7 @@ class SwapRequest(BaseModel):
     recipient_address: Optional[str] = None
     timelock_hours: int = 24
     priority: str = "normal"
+    conditions: Optional[Dict[str, Any]] = None
 
 
 class WalletInfo(BaseModel):
