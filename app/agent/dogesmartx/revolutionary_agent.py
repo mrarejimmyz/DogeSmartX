@@ -136,29 +136,74 @@ class DogeSmartXSepoliaAgent(ToolCallAgent):
     def _initialize_sepolia_services(self) -> None:
         """Initialize Sepolia-specific services."""
         try:
-            # Initialize HTLC manager if available
-            if CrossChainHTLCManager != object:
-                self.htlc_manager = CrossChainHTLCManager()
-                logger.info("✅ HTLC Manager initialized")
+            # Initialize HTLC services with graceful degradation
+            if SepoliaHTLCService != object:
+                try:
+                    # Try to initialize with config if available
+                    if hasattr(self.config, 'sepolia') and isinstance(self.config, dict):
+                        self.sepolia_htlc = SepoliaHTLCService()
+                    else:
+                        logger.info("⚠️  Sepolia HTLC Service skipped - config not available")
+                except Exception as e:
+                    logger.info(f"⚠️  Sepolia HTLC Service skipped - {e}")
+                else:
+                    logger.info("✅ Sepolia HTLC Service initialized")
+            
+            if DogecoinHTLCService != object:
+                try:
+                    # Try to initialize with config if available
+                    if hasattr(self.config, 'dogecoin') and isinstance(self.config, dict):
+                        self.dogecoin_htlc = DogecoinHTLCService()
+                    else:
+                        logger.info("⚠️  Dogecoin HTLC Service skipped - config not available")
+                except Exception as e:
+                    logger.info(f"⚠️  Dogecoin HTLC Service skipped - {e}")
+                else:
+                    logger.info("✅ Dogecoin HTLC Service initialized")
+            
+            # Initialize HTLC manager with services if available
+            if (CrossChainHTLCManager != object and 
+                hasattr(self, 'sepolia_htlc') and self.sepolia_htlc and 
+                hasattr(self, 'dogecoin_htlc') and self.dogecoin_htlc):
+                try:
+                    self.htlc_manager = CrossChainHTLCManager(
+                        sepolia_service=self.sepolia_htlc,
+                        dogecoin_service=self.dogecoin_htlc
+                    )
+                    logger.info("✅ HTLC Manager initialized")
+                except Exception as e:
+                    logger.info(f"⚠️  HTLC Manager skipped - {e}")
+            else:
+                logger.info("⚠️  HTLC Manager skipped - services not available")
             
             # Initialize resolver if available
             if SepoliaTestnetResolver != object:
-                self.resolver = SepoliaTestnetResolver()
-                logger.info("✅ Sepolia Resolver initialized")
+                try:
+                    self.resolver = SepoliaTestnetResolver()
+                    logger.info("✅ Sepolia Resolver initialized")
+                except Exception as e:
+                    logger.info(f"⚠️  Sepolia Resolver skipped - {e}")
             
-            # Initialize HTLC services
-            if SepoliaHTLCService != object:
-                self.sepolia_htlc = SepoliaHTLCService()
-                logger.info("✅ Sepolia HTLC Service initialized")
+            # Count initialized services
+            initialized_services = []
+            if hasattr(self, 'sepolia_htlc') and self.sepolia_htlc:
+                initialized_services.append("Sepolia HTLC")
+            if hasattr(self, 'dogecoin_htlc') and self.dogecoin_htlc:
+                initialized_services.append("Dogecoin HTLC")
+            if hasattr(self, 'htlc_manager') and self.htlc_manager:
+                initialized_services.append("HTLC Manager")
+            if hasattr(self, 'resolver') and self.resolver:
+                initialized_services.append("Resolver")
             
-            if DogecoinHTLCService != object:
-                self.dogecoin_htlc = DogecoinHTLCService()
-                logger.info("✅ Dogecoin HTLC Service initialized")
-            
-            logger.info("🌟 Sepolia services initialized successfully")
+            if initialized_services:
+                logger.info(f"🌟 Sepolia services initialized: {', '.join(initialized_services)}")
+            else:
+                logger.info("🔄 Running in basic mode - specialized services will be available when configuration is provided")
             
         except Exception as e:
-            logger.error(f"❌ Failed to initialize Sepolia services: {e}")
+            logger.error(f"❌ Service initialization error: {e}")
+            # Always continue with graceful degradation
+            logger.info("🔄 Continuing with basic agent functionality...")
 
     def _get_sepolia_system_prompt(self) -> str:
         """Get the system prompt for Sepolia testnet operations."""
