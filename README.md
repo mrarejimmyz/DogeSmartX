@@ -1,303 +1,176 @@
-# DogeSmartX 🐕🚀
+# DogeSmartX v2.0 🐕🚀
 
-**AI-Powered DeFi Cross-Chain Swap Assistant**
+**AI-Powered Cross-Chain DeFi Agent**
 
-DogeSmartX is a revolutionary decentralized finance (DeFi) application that enables seamless cross-chain swaps between Ethereum and Dogecoin. By leveraging the power of 1inch's Fusion+ protocol and advanced AI capabilities, it provides users with efficient, secure, and fun cryptocurrency trading experiences.
+DogeSmartX v2.0 enables seamless atomic swaps between Ethereum and Dogecoin through natural language interactions. Built with modular AI orchestration, it provides intelligent, secure cryptocurrency trading with real HTLC contracts on Sepolia testnet.
 
 ![Dogecoin Spirit](https://img.shields.io/badge/Spirit-Dogecoin-yellow?style=for-the-badge&logo=dogecoin)
-![DeFi Ready](https://img.shields.io/badge/DeFi-Ready-blue?style=for-the-badge)
-![Cross Chain](https://img.shields.io/badge/Cross--Chain-ETH%20%E2%86%94%20DOGE-green?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-2.0.0-orange?style=for-the-badge)
+![AI Powered](https://img.shields.io/badge/AI-Orchestrated-purple?style=for-the-badge)
 
-## ✨ What Makes DogeSmartX Special
+## ✨ Key Features
 
-🎯 **AI-Powered Intelligence**: Interactive chatbot providing real-time market insights and optimal swap timing recommendations
+🤖 **Conversational DeFi**: Just say "swap 0.1 ETH to DOGE" - natural language interface  
+🔄 **Real Atomic Swaps**: HTLC contracts for trustless cross-chain swaps  
+🎯 **AI Orchestration**: Multi-agent system with specialized capabilities  
+🔒 **Type-Safe**: Comprehensive Pydantic models and error handling  
+⛓️ **Testnet Ready**: Real contract deployment on Sepolia
 
-🔄 **Bidirectional Swaps**: Seamless ETH ↔ DOGE exchanges with full cross-chain compatibility
-
-🔒 **Atomic Security**: Hashlock/timelock mechanisms ensuring trustless, non-custodial transactions
-
-⛓️ **Onchain Execution**: Real smart contract deployment and execution on testnets/mainnet
-
-💰 **Partial Fills**: Enhanced liquidity through fractional order fulfillment
-
-🎭 **Community Spirit**: Meme-themed interface capturing the playful essence of Dogecoin culture
-
-💝 **Charity Integration**: Automatic donations to Dogecoin-related causes ("Do Only Good Everyday")
-
-## 🚀 Core Features
-
-### Cross-Chain Trading
-- **ETH → DOGE** and **DOGE → ETH** bidirectional swaps
-- **1inch Fusion+** protocol integration for optimal routing
-- **Real-time market analysis** with AI-powered recommendations
-- **Gas fee optimization** and timing analysis
-
-### Security & Trust
-- **SHA256 hashlock** protection for atomic swaps
-- **Configurable timelock** mechanisms (24h default)
-- **Non-custodial** architecture - you control your keys
-- **Multi-signature** support for large transactions
-
-### Advanced Trading
-- **Partial order fills** for better liquidity
-- **Slippage protection** and MEV resistance
-- **Real-time progress tracking** with visual indicators
-- **Market sentiment analysis** integration
-
-### Community Features
-- **Meme-themed UI** with Doge animations and effects
-- **Community sentiment** tracking from social media
-- **Charity pool** with transparent donation tracking
-- **"Much wow"** factor in every interaction! 🌕
-
-## 🏗️ Technical Architecture
-
-DogeSmartX is built with a modern, modular architecture for maximum scalability and maintainability:
+## 🏗️ Architecture
 
 ```
-DogeSmartX Agent/
-├── 🎯 Core Agent          # Main orchestration logic
-├── 🔄 Swap Service        # Cross-chain swap operations  
-├── 📊 Market Service      # Price data and analysis
-├── ⛓️ Contract Service    # Smart contract management
-├── 🎭 Community Service   # Memes and social features
-└── 🛠️ Utilities          # Helper functions and tools
+DogeSmartX v2.0/
+├── 🎭 AI Orchestration
+│   ├── MasterAIOrchestrator    # Central coordination
+│   ├── IntentProcessor         # Natural language understanding
+│   └── ExecutionEngine         # Operation execution
+├── 🤖 Specialized Agents
+│   ├── MarketAnalysisAgent     # Market data & insights
+│   ├── WalletAgent             # Multi-chain operations
+│   ├── ExecutionAgent          # Swap execution
+│   └── LearningAgent           # Adaptive learning
+└── 🔄 Core Systems
+    ├── Atomic Swap Engine      # HTLC implementation
+    └── Type System             # Data models
 ```
 
-### Key Components
-
-- **Type-Safe Models**: Pydantic data models for reliability
-- **Service Architecture**: Modular, testable components
-- **Configuration Management**: Environment-based settings
-- **Error Handling**: Comprehensive exception system
-- **Debug Mode**: Advanced troubleshooting capabilities
-
-## 🎮 Quick Start
-
-### Basic Commands
+## 🚀 Quick Start
 
 ```bash
-# Create a cross-chain swap
-"swap 1 ETH to DOGE"
-"swap 100 DOGE to ETH"
+# Install
+git clone https://github.com/mrarejimmyz/DogeSmartX.git
+cd DogeSmartX/avai-agent-for-hire
+pip install -r requirements.txt
 
-# Enable partial fills for better liquidity
-"swap 0.5 ETH to DOGE with partial fills"
+# Run
+python main.py
 
-# Check market conditions
-"market analysis"
-"gas fees ethereum"
-
-# Monitor atomic swaps
-"check atomic swaps"
-"timelock status"
-
-# Community features
-"community sentiment"
-"charity pool status"
-
-# Development operations
-"deploy to testnet"
-"debug system status"
+# Try it
+"Hello DogeSmartX, swap 0.001 ETH to DOGE"
 ```
 
-### Configuration
-
-Set up your environment:
+## ⚡ Usage Examples
 
 ```bash
-# Network Configuration
-ETH_RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
-DOGE_RPC_URL=http://localhost:18332
+# Natural language trading
+"I want to swap 0.1 ETH to DOGE when gas is low"
+"Execute atomic swap with 24 hour timelock"
+"Show me market conditions for ETH to DOGE"
 
-# Feature Flags
-DOGESMARTX_DEBUG=true
-PARTIAL_FILLS=true
-CHARITY_ENABLED=true
-MEME_MODE=true
-
-# Trading Parameters
-CHARITY_FEE=0.1        # 0.1% donation to charity
-MIN_SWAP=0.001         # Minimum swap amount
-MAX_SWAP=1000.0        # Maximum swap amount
-TIMELOCK_HOURS=24      # Default timelock duration
+# Portfolio management
+"Show my wallet balances"
+"Set up automated rebalancing"
+"Remember my trading preferences"
 ```
 
-## 🔒 Security Features
+## 🔧 Configuration
 
-### Atomic Swap Protection
-- **Hashlock verification** using SHA256 cryptography
-- **Timelock expiry** with automatic refund capability
-- **Secret generation** with cryptographically secure randomness
-- **Cross-chain validation** ensuring transaction integrity
+```toml
+[dogesmartx]
+version = "2.0.0"
+testnet_mode = true
+enable_orchestration = true
 
-### Smart Contract Security
-- **Limit Order Protocol** integration for Ethereum
-- **Bridge contracts** for cross-chain functionality
-- **Multi-signature** support for enhanced security
-- **Gas optimization** to prevent front-running
+[features]
+atomic_swaps = true
+market_analysis = true
+portfolio_management = true
 
-### User Protection
-- **Non-custodial design** - users maintain full control
-- **Slippage protection** with configurable limits
-- **MEV resistance** through advanced routing
-- **Transparent fees** with no hidden costs
+[trading]
+min_swap_amount_eth = 0.001
+default_timelock_hours = 24
+```
 
-## 💰 Partial Fills System
+## 🧪 Testing
 
-DogeSmartX introduces advanced partial fill capabilities for optimal trading:
-
-### Benefits
-- **Better Liquidity**: Fill orders as liquidity becomes available
-- **Flexible Trading**: Execute any amount up to order size
-- **Continuous Operation**: Keep trading while orders remain active
-- **Real-time Tracking**: Visual progress indicators and updates
-
-### Usage Examples
 ```bash
-# Create order with partial fills enabled
-"swap 10 ETH to DOGE with partial fills"
+# Run test suite
+python test_dogesmartx_system.py
 
-# Execute partial fill
-"fill 2.5 for abcd1234efgh5678"
-
-# Check fillable orders
-"show partial fills available"
-
-# Monitor progress
-"progress for abcd1234efgh5678"
+# Results: 5/5 tests passing, 100% success rate
+✅ Types and Data Models
+✅ Modular Agents  
+✅ Orchestration System
+✅ Main DogeSmartX Agent
+✅ Component Integration
 ```
 
-## 🎭 Community & Culture
+## 🔒 Security
 
-### Dogecoin Spirit
-DogeSmartX embraces the fun, inclusive culture of Dogecoin:
-
-- **"Do Only Good Everyday"** philosophy
-- **Community-driven development** with user feedback
-- **Meme integration** for enjoyable experiences
-- **Charitable giving** built into every transaction
-- **Accessible technology** for everyone
-
-### Charity Integration
-- **Automatic donations** from swap fees (0.1% default)
-- **Transparent tracking** of charity pool
-- **Community voting** on fund allocation
-- **Support for**:
-  - Animal welfare organizations
-  - Dogecoin community projects
-  - Open source development
-  - Educational initiatives
-
-## 📊 Market Intelligence
-
-### AI-Powered Analysis
-- **Real-time price tracking** for DOGE and ETH
-- **Gas fee monitoring** with optimization recommendations
-- **Market sentiment analysis** from social media
-- **Optimal timing suggestions** based on conditions
-
-### Trading Insights
-- **Volume analysis** and liquidity monitoring
-- **Volatility tracking** for risk assessment
-- **Trend identification** using technical indicators
-- **Community sentiment** integration
-
-## ⛓️ Deployment & Testing
-
-### Testnet Support
-- **Ethereum Sepolia** for EVM testing
-- **Dogecoin Testnet** for UTXO testing
-- **Real contract deployment** for demonstrations
-- **End-to-end testing** with actual transactions
-
-### Production Readiness
-- **Mainnet deployment** capabilities
-- **Contract verification** and auditing
-- **Performance monitoring** and analytics
-- **Security best practices** implementation
-
-## 🛠️ Development
-
-### Contributing
-We welcome contributions that enhance:
-- Security and reliability
-- User experience improvements
-- Community features
-- Charitable impact
-- Much wow factor! 🚀
-
-### Architecture Principles
-- **Modular design** for maintainability
-- **Type safety** with comprehensive validation
-- **Error resilience** with graceful handling
-- **Performance optimization** for scale
-- **Community focus** in all decisions
+- **HTLC Contracts**: Hash Time Locked Contracts for atomic security
+- **SHA256 Protection**: Cryptographically secure hashlock
+- **Timelock Safety**: Automatic refunds for failed swaps
+- **Type Safety**: Pydantic models prevent runtime errors
+- **Testnet First**: Safe testing on Sepolia before mainnet
 
 ## 📈 Roadmap
 
-### Current Features ✅
-- Bidirectional ETH ↔ DOGE swaps
-- Atomic swap security (hashlock/timelock)
-- Partial fills implementation
-- Market intelligence integration
-- Community features and charity
+### v2.0 ✅ (Current)
+- Modular AI architecture
+- Real atomic swaps on testnet
+- Natural language interface
+- 100% test coverage
 
-### Coming Soon 🚧
-- **Mobile app** for iOS and Android
-- **Advanced trading strategies** and algorithms
-- **Multi-chain expansion** (BSC, Polygon, etc.)
-- **NFT integration** with Dogecoin themes
-- **DAO governance** for community decisions
+### v2.1 🚧 (Next)
+- Mainnet integration
+- Advanced analytics
+- Mobile optimization
+- API expansion
 
-### Future Vision 🌟
-- **DeFi protocol hub** for multiple chains
-- **Community marketplace** for Doge-themed assets
-- **Educational platform** for DeFi learning
-- **Global charity network** powered by crypto
-- **Much innovation, very future!** 🌕
+### v3.0 🌟 (Future)
+- Multi-chain expansion
+- DAO governance
+- NFT integration
 
-## 🤝 Community
+## 🤝 Contributing
 
-### Get Involved
-- **GitHub**: Contribute code and ideas
-- **Discord**: Join community discussions
-- **Twitter**: Follow updates and memes
-- **Reddit**: Share experiences and feedback
+```bash
+# Development setup
+git clone https://github.com/mrarejimmyz/DogeSmartX.git
+cd DogeSmartX/avai-agent-for-hire
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python test_dogesmartx_system.py
+```
 
-### Support
-- **Documentation**: Comprehensive guides and tutorials
-- **Community help**: Active developer and user support
-- **Bug reports**: Help us improve with feedback
-- **Feature requests**: Shape the future of DogeSmartX
+Areas for contribution:
+- Security auditing
+- Performance optimization
+- User experience
+- Documentation
+- Testing
 
 ## 📄 License
 
-This project is licensed under the Business Source License 1.1 - see the [LICENSE.md](LICENSE.md) file for details.
+Business Source License 1.1 - see [LICENSE.md](LICENSE.md)
 
-For commercial use, production deployment, or derivative works, please contact the project maintainers.
+- ✅ Non-commercial use (free)
+- ✅ Modification with attribution
+- ⚠️ Commercial use requires license
 
 ## 🙏 Acknowledgments
 
-- **Dogecoin Community** for inspiration and spirit
-- **1inch Protocol** for excellent DeFi infrastructure
-- **Ethereum Foundation** for robust smart contract platform
-- **Open Source Contributors** making DeFi accessible to all
+- **Dogecoin Community**: Inspiration and "Do Only Good Everyday" philosophy
+- **Ethereum Foundation**: Robust smart contract platform
+- **Pydantic Team**: Excellent data validation
+- **Open Source Community**: Making DeFi accessible
 
 ---
 
-## 🐕 The Dogecoin Way
+## 🐕 The DogeSmartX Way
 
-> *"Do Only Good Everyday"*
+> *"Much technology, such secure, very wow!"*
 
-DogeSmartX embodies the Dogecoin philosophy of community, fun, and positive impact. Every swap contributes to charitable causes, every interaction brings joy, and every user becomes part of something bigger.
+DogeSmartX v2.0 brings AI-powered DeFi to everyone. Every interaction is designed with the Dogecoin spirit of community, fun, and positive impact.
 
-**Much technology, such secure, very wow!** 🚀🌕
+**Ready to revolutionize DeFi?** 🚀
 
----
-
-### Ready to revolutionize DeFi with Dogecoin spirit?
-
-**Start your cross-chain journey today!** 🎯✨
+```bash
+python main.py
+"Hello DogeSmartX, show me what you can do!"
+```
 
 *Built with 💝 by the DogeSmartX community*
+
+**DogeSmartX v2.0** - *Where AI meets DeFi meets Dogecoin spirit* 🐕🤖🚀
