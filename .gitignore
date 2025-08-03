@@ -13,7 +13,7 @@
 !app/agent/dogesmartx_original.py
 
 # Don't ignore essential project files
-!DOGESMARTX_README.md
+!README.md
 !LICENSE*
 !requirements.txt
 !setup.py
