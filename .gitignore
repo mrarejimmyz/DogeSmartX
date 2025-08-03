@@ -3,3 +3,18 @@
 
 # But don't ignore this .gitignore file itself
 !.gitignore
+
+# Don't ignore DogeSmartX agent files
+!app/
+!app/agent/
+!app/agent/dogesmartx.py
+!app/agent/dogesmartx/
+!app/agent/dogesmartx/**
+!app/agent/dogesmartx_original.py
+
+# Don't ignore essential project files
+!README.md
+!LICENSE*
+!requirements.txt
+!setup.py
+!main.py
