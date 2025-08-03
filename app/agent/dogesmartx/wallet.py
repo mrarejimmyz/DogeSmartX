@@ -725,7 +725,7 @@ class DogeSmartXWallet:
                     logger.info(f"💡 Need {required_eth:.6f} ETH for real deployment. Get testnet ETH from:")
                     logger.info(f"   🚰 https://sepoliafaucet.com/")
                     logger.info(f"   🚰 https://sepolia-faucet.pk910.de/")
-                    eth_deployment = await self._simulate_testnet_demo(swap_params, recipient_eth_address, balance_eth, wallet_address)
+                    eth_deployment = await self._simulate_realistic_eth_htlc_deployment(swap_params, recipient_eth_address, balance_eth)
                     swap_params.status = "testnet_demo"
             else:
                 logger.warning("⚠️ No web3 connection, simulating ETH HTLC...")

@@ -449,6 +449,127 @@ class DogechainWallet:
             logger.error(f"❌ DOGE storage failed: {e}")
             raise
 
+    async def bridge_to_dogecoin_mainnet(self, dogecoin_address: str, amount: float) -> Dict[str, Any]:
+        """Bridge DOGE from Dogechain Testnet to Dogecoin Mainnet address
+        
+        IMPORTANT: This is a bridging/conversion function that would require:
+        1. Converting Dogechain Testnet DOGE to actual Dogecoin
+        2. Using a bridge service or exchange
+        3. Manual conversion process since these are different networks
+        
+        Args:
+            dogecoin_address: Traditional Dogecoin address (starts with D)
+            amount: Amount of DOGE to bridge
+        """
+        try:
+            # Validate Dogecoin address format
+            if not dogecoin_address.startswith('D'):
+                raise Exception(f"Invalid Dogecoin mainnet address: {dogecoin_address}")
+            
+            # Check if we have enough DOGE
+            balance_info = await self.get_balance()
+            current_balance = balance_info.get('stored_doge_total', 0.0)
+            if amount > current_balance:
+                raise Exception(f"Insufficient DOGE balance: {current_balance} < {amount}")
+            
+            # This is a simulation since we can't directly bridge testnet to mainnet
+            bridge_info = {
+                "success": False,
+                "simulation": True,
+                "from_network": "Dogechain Testnet",
+                "to_network": "Dogecoin Mainnet", 
+                "from_address": self.storage_address,
+                "to_address": dogecoin_address,
+                "amount": amount,
+                "available_balance": current_balance,
+                "bridge_options": [
+                    {
+                        "method": "Exchange Bridge",
+                        "description": "Use an exchange that supports both Dogechain and Dogecoin",
+                        "steps": [
+                            "1. Send DOGE from Dogechain to exchange",
+                            "2. Convert to Dogecoin on exchange", 
+                            "3. Withdraw to your Dogecoin address"
+                        ]
+                    },
+                    {
+                        "method": "Official Bridge",
+                        "description": "Use Dogechain's official bridge (if available)",
+                        "steps": [
+                            "1. Connect to bridge.dogechain.dog",
+                            "2. Bridge Dogechain DOGE to Dogecoin",
+                            "3. Withdraw to your address"
+                        ]
+                    },
+                    {
+                        "method": "Direct Transfer",
+                        "description": "For testing: Get actual DOGE on mainnet",
+                        "steps": [
+                            "1. Buy DOGE on exchange",
+                            "2. Withdraw to D7MPeVvsVrQYBkVRRMrkHEJrpVHoRvEr4G",
+                            "3. Use for real testing"
+                        ]
+                    }
+                ],
+                "warning": "⚠️ Cannot directly transfer from Dogechain Testnet to Dogecoin Mainnet",
+                "recommendation": "Use testnet DOGE for testing, or acquire real DOGE for mainnet"
+            }
+            
+            logger.warning(f"⚠️ Cannot bridge {amount} DOGE from Dogechain Testnet to Dogecoin Mainnet")
+            logger.info(f"💡 Your Dogecoin address: {dogecoin_address}")
+            logger.info(f"📊 Available on Dogechain Testnet: {current_balance} DOGE")
+            logger.info(f"🔗 Bridge options available - see result for details")
+            
+            return bridge_info
+            
+        except Exception as e:
+            logger.error(f"❌ Bridge operation failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "from_network": "Dogechain Testnet",
+                "to_network": "Dogecoin Mainnet"
+            }
+
+    async def get_bridge_status(self) -> Dict[str, Any]:
+        """Get information about bridging options between networks"""
+        try:
+            wallet_data = await self._load_wallet_data()
+            balance_info = await self.get_balance()
+            current_balance = balance_info.get('stored_doge_total', 0.0)
+            
+            return {
+                "dogechain_testnet": {
+                    "balance": current_balance,
+                    "address": self.storage_address,
+                    "network": "Dogechain Testnet (ChainID: 568)",
+                    "currency": "DOGE (EVM-compatible)",
+                    "explorer": f"https://explorer-testnet.dogechain.dog/address/{self.storage_address}"
+                },
+                "dogecoin_mainnet": {
+                    "supported_address_format": "D...",
+                    "example": "D7MPeVvsVrQYBkVRRMrkHEJrpVHoRvEr4G",
+                    "network": "Dogecoin Mainnet",
+                    "currency": "DOGE (Bitcoin-based)",
+                    "note": "Different blockchain, requires bridging"
+                },
+                "bridge_requirements": {
+                    "direct_transfer": "❌ Not possible (different blockchains)",
+                    "bridge_service": "✅ Required for cross-chain transfer",
+                    "exchange_method": "✅ Convert via centralized exchange",
+                    "manual_conversion": "✅ Buy real DOGE separately"
+                },
+                "recommendations": [
+                    "Use Dogechain Testnet DOGE for EVM testing",
+                    "Acquire real Dogecoin for mainnet testing",
+                    "Consider using Dogecoin testnet for testing",
+                    "Use exchanges for real DOGE conversion"
+                ]
+            }
+            
+        except Exception as e:
+            return {"error": str(e)}
+
     def get_connection_info(self) -> Dict[str, Any]:
         """Get Dogechain connection information"""
         return {
